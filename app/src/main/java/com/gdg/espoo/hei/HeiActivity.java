@@ -1,14 +1,25 @@
 package com.gdg.espoo.hei;
 
+import com.gdg.espoo.hei.location.Place;
+import com.gdg.espoo.hei.location.PlacesController;
 import com.gdg.espoo.hei.util.SystemUiHider;
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.GooglePlayServicesClient;
+import com.google.android.gms.location.LocationClient;
+import com.google.android.gms.location.LocationListener;
+import com.google.android.gms.location.LocationRequest;
 
 import android.annotation.TargetApi;
 import android.app.Activity;
+import android.location.Location;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.TextView;
+
+import java.util.List;
 
 /**
  * An example full-screen activity that shows and hides the system UI (i.e.
@@ -16,7 +27,13 @@ import android.view.View;
  *
  * @see SystemUiHider
  */
-public class HeiActivity extends Activity {
+public class HeiActivity extends Activity implements GooglePlayServicesClient.ConnectionCallbacks,
+        GooglePlayServicesClient.OnConnectionFailedListener, LocationListener, PlacesController.PlacesListener {
+    private LocationClient locationClient;
+    private static final int LOCATION_UPDATE_INTERVAL = 10000;
+    private final LocationRequest locationRequest = new LocationRequest()
+            .setFastestInterval(LOCATION_UPDATE_INTERVAL).create();
+
     /**
      * Whether or not the system UI should be auto-hidden after
      * {@link #AUTO_HIDE_DELAY_MILLIS} milliseconds.
@@ -48,6 +65,8 @@ public class HeiActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        locationClient = new LocationClient(this, this, this);
 
         setContentView(R.layout.activity_hei);
 
@@ -124,6 +143,17 @@ public class HeiActivity extends Activity {
         delayedHide(100);
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        locationClient.connect();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        locationClient.disconnect();
+    }
 
     /**
      * Touch listener to use for in-layout UI controls to delay hiding the
@@ -155,5 +185,35 @@ public class HeiActivity extends Activity {
     private void delayedHide(int delayMillis) {
         mHideHandler.removeCallbacks(mHideRunnable);
         mHideHandler.postDelayed(mHideRunnable, delayMillis);
+    }
+
+    @Override
+    public void onConnected(Bundle bundle) {
+        locationClient.requestLocationUpdates(locationRequest, this);
+    }
+
+    @Override
+    public void onDisconnected() {
+        // TODO: handle
+    }
+
+    @Override
+    public void onConnectionFailed(ConnectionResult connectionResult) {
+        // TODO: handle
+    }
+
+    @Override
+    public void onLocationChanged(Location location) {
+        new PlacesController(this, "AIzaSyAY8WYitaytnXoTbtTn752-xVltFg2uKic").getCurrentPlace(location, this);
+    }
+
+    @Override
+    public void onPlacesResult(List<Place> places) {
+        ((TextView) findViewById(R.id.fullscreen_content)).setText(places.get(0).name);
+    }
+
+    @Override
+    public void onPlacesError() {
+
     }
 }
