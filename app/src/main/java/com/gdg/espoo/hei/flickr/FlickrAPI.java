@@ -7,18 +7,23 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 
-/**
- * Created by xavi on 15/12/13.
- */
 public class FlickrAPI {
 
-    public static Bitmap search(String query) throws Exception {
+    final static private String APIKey = "&api_key=APIKEY";
+    //final static private String secret = "SECRET";
+
+    final static private String APIURL = "http://api.flickr.com/services/rest/?method=";
+    final static private String method = "flickr.photos.search";
+
+    public static Bitmap search(double latitude, double longitude) throws Exception {
         URL url = null;
         try {
-            url = new URL("http://flickr.com/api/search/" + query);
+            url = new URL(APIURL + method + APIKey + "&lat=" + String.valueOf(latitude) +
+                    "&lon=" + String.valueOf(longitude));
         } catch (MalformedURLException e) {
             e.printStackTrace();
         }
+
         if (url != null)
             try {
                 return BitmapFactory.decodeStream(url.openConnection().getInputStream());
